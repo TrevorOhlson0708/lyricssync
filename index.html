@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>LyricsSync</title>
+
+<!-- PWA / iOS home screen setup -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0b0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LyricsSync">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="login-screen" class="screen">
+  <div class="login-card">
+    <h1>LyricsSync</h1>
+    <p>Synced lyrics for whatever's playing on Spotify.</p>
+    <button id="login-btn">Connect Spotify</button>
+    <p id="login-error" class="error"></p>
+  </div>
+</div>
+
+<div id="idle-screen" class="screen hidden">
+  <div class="idle-card">
+    <div class="pulse"></div>
+    <p id="idle-message">Waiting for playback&hellip;</p>
+    <p class="hint">Play a song on Spotify (any device)</p>
+  </div>
+</div>
+
+<div id="lyrics-screen" class="screen hidden">
+  <div id="track-info">
+    <img id="art" src="" alt="">
+    <div>
+      <div id="track-title"></div>
+      <div id="track-artist"></div>
+    </div>
+  </div>
+  <div id="lyrics-container">
+    <div id="lyrics-list"></div>
+  </div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
