@@ -1,0 +1,67 @@
+name: Build unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'native/**'
+      - '.github/workflows/build-ipa.yml'
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: native
+        run: xcodegen generate
+
+      - name: Build unsigned .app (app + widget extension)
+        working-directory: native
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project LyricsSync.xcodeproj \
+            -scheme LyricsSync \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            | xcpretty || true
+
+      - name: Package unsigned IPA
+        working-directory: native
+        run: |
+          set -e
+          APP_PATH="build/Build/Products/Release-iphoneos/LyricsSync.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Build product not found at $APP_PATH — build likely failed above."
+            find build -maxdepth 5 -iname "*.app" || true
+            exit 1
+          fi
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          rm -f LyricsSync.ipa
+          zip -r LyricsSync.ipa Payload
+          mkdir -p ../dist
+          mv LyricsSync.ipa ../dist/LyricsSync.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LyricsSync-ipa
+          path: dist/LyricsSync.ipa
