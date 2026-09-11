@@ -2,7 +2,7 @@
 // Create a free app at https://developer.spotify.com/dashboard, then paste its
 // Client ID below. Add this page's exact URL as a Redirect URI in that app's
 // settings (Spotify dashboard -> your app -> Edit Settings -> Redirect URIs).
-const CLIENT_ID = "YOUR_SPOTIFY_CLIENT_ID";
+const CLIENT_ID = "d75d079123264d1a8edec9491be9d133";
 const REDIRECT_URI = window.location.origin + window.location.pathname;
 const SCOPES = "user-read-currently-playing user-read-playback-state";
 
