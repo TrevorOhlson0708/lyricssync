@@ -5,6 +5,7 @@ import AuthenticationServices
 struct ContentView: View {
     @ObservedObject private var auth = SpotifyAuth.shared
     @StateObject private var sync = SyncCoordinator()
+    @State private var debugMessage = ""
 
     var body: some View {
         ZStack {
@@ -60,11 +61,33 @@ struct ContentView: View {
                     Text("Synced lyrics on your CarPlay widgets page.")
                         .foregroundStyle(.secondary)
                     Button("Connect Spotify") {
-                        guard let anchor = ContentView.currentWindow() else { return }
-                        auth.login(presentationAnchor: anchor) { _ in }
+                        debugMessage = "Button tapped…"
+                        guard let anchor = ContentView.currentWindow() else {
+                            debugMessage = "ERROR: no window found to present login from"
+                            return
+                        }
+                        debugMessage = "Starting login session…"
+                        auth.login(presentationAnchor: anchor) { result in
+                            DispatchQueue.main.async {
+                                switch result {
+                                case .success:
+                                    debugMessage = ""
+                                case .failure(let error):
+                                    debugMessage = "Login failed: \(error.localizedDescription)"
+                                }
+                            }
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
+
+                    if !debugMessage.isEmpty {
+                        Text(debugMessage)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                    }
                 }
                 .padding()
             }
@@ -73,9 +96,12 @@ struct ContentView: View {
     }
 
     private static func currentWindow() -> ASPresentationAnchor? {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap { $0.windows }
-            .first { $0.isKeyWindow }
+        let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        if let keyWindow = windowScenes.flatMap({ $0.windows }).first(where: { $0.isKeyWindow }) {
+            return keyWindow
+        }
+        // Fallback: no window is marked "key" yet (can happen right after
+        // Developer Mode re-enables the app) — just grab any visible window.
+        return windowScenes.flatMap({ $0.windows }).first
     }
 }
