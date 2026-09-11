@@ -20,6 +20,10 @@ final class SpotifyAuth: NSObject, ObservableObject {
 
     private var codeVerifier: String?
     private var webAuthSession: ASWebAuthenticationSession?
+    // ASWebAuthenticationSession.presentationContextProvider is a *weak*
+    // reference — without a strong reference held somewhere else, ARC frees
+    // this immediately and the session has nowhere to present into.
+    private var contextProvider: ContextProvider?
 
     private let defaults = UserDefaults.standard
     private let accessTokenKey = "ls_access_token"
@@ -75,10 +79,15 @@ final class SpotifyAuth: NSObject, ObservableObject {
                 }
             }
         }
-        session.presentationContextProvider = ContextProvider(anchor: presentationAnchor)
+        let provider = ContextProvider(anchor: presentationAnchor)
+        contextProvider = provider
+        session.presentationContextProvider = provider
         session.prefersEphemeralWebBrowserSession = false
         webAuthSession = session
-        session.start()
+        let started = session.start()
+        if !started {
+            completion(.failure(NSError(domain: "SpotifyAuth", code: 5, userInfo: [NSLocalizedDescriptionKey: "ASWebAuthenticationSession.start() returned false"])))
+        }
     }
 
     func logout() {
